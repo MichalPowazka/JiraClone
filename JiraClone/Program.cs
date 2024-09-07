@@ -9,17 +9,27 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+List<string> errors = new List<string>();
+var a = errors.Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+
+
+
+
+#region test
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+#endregion
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
+
+
+public delegate int MyDelegate(string s);
