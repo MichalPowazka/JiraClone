@@ -1,21 +1,44 @@
-﻿using DataAccessLayer.Migrations;
+﻿using Core.Common;
+using Core.Filters;
+using Core.Models;
+using Core.Repostiories;
+using DataAccessLayer.Migrations;
 using FluentMigrator.Runner;
 
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DataAccessLayer;
-
-class Program
+public class Program
 {
-    static void Main(string[] args)
+   public static void Main(string[] args)
     {
-        using (var serviceProvider = CreateServices())
-        using (var scope = serviceProvider.CreateScope())
+        IProjectRepository projectRepository = new ProjectRepository();
+        Project test = new Project()
         {
-            // Put the database update into a scope to ensure
-            // that all resources will be disposed.
-            UpdateDatabase(scope.ServiceProvider);
-        }
+            Id =1,
+            Name = "taxfaffaafs",
+            EndDate = DateTime.Now,
+            StartDate = DateTime.Now,
+        };
+        //projectRepository.AddProject(test);
+        //var filter = new PagedQuerryFilter<ProjectFilter>()
+        //{
+        //    Page = 1,
+        //    PageCount = 5,
+        //    FIlter = new ProjectFilter()
+        //    {
+        //        Name="dupa"
+        //    }
+        //};
+        projectRepository.UpdateProject(test);
+
+        //using (var serviceProvider = CreateServices())
+        //using (var scope = serviceProvider.CreateScope())
+        //{
+        //    // Put the database update into a scope to ensure
+        //    // that all resources will be disposed.
+        //    UpdateDatabase(scope.ServiceProvider);
+        //}
     }
 
     /// <summary>
@@ -48,6 +71,12 @@ class Program
         var runner = serviceProvider.GetRequiredService<IMigrationRunner>();
 
         // Execute the migrations
+
         runner.MigrateUp();
+
+        //runner.Rollback(countOfStep); - cofanie migracji
+
     }
 }
+
+//todo code reafactor

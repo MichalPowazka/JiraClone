@@ -15,7 +15,7 @@ namespace DataAccessLayer.Migrations
             Create.Table("Project")
                 .WithColumn("Id").AsInt64().PrimaryKey().Identity()
                 .WithColumn("Name").AsString()
-                .WithColumn("StartDatw").AsDateTime()
+                .WithColumn("StartDate").AsDateTime()
                 .WithColumn("EndDate").AsDateTime();
         }
     }
