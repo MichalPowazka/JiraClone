@@ -10,12 +10,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DataAccessLayer;
 public class Program
 {
-   public static void Main(string[] args)
+    public static void Main(string[] args)
     {
         IProjectRepository projectRepository = new ProjectRepository();
         Project test = new Project()
         {
-            Id =1,
+            Id = 1,
             Name = "taxfaffaafs",
             EndDate = DateTime.Now,
             StartDate = DateTime.Now,
@@ -32,13 +32,18 @@ public class Program
         //};
         projectRepository.UpdateProject(test);
 
-        //using (var serviceProvider = CreateServices())
-        //using (var scope = serviceProvider.CreateScope())
-        //{
-        //    // Put the database update into a scope to ensure
-        //    // that all resources will be disposed.
-        //    UpdateDatabase(scope.ServiceProvider);
-        //}
+        try
+        {
+            using (var serviceProvider = CreateServices())
+            using (var scope = serviceProvider.CreateScope())
+            {
+                UpdateDatabase(scope.ServiceProvider);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -55,7 +60,8 @@ public class Program
                 // Set the connection string
                 .WithGlobalConnectionString("Data Source=DARKNEFILN;Initial Catalog=JiraClone;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;")
                 // Define the assembly containing the migrations
-                .ScanIn(typeof(AddProject).Assembly).For.Migrations())
+
+                .ScanIn(typeof(AddCoreTables).Assembly).For.Migrations())
             // Enable logging to console in the FluentMigrator way
             .AddLogging(lb => lb.AddFluentMigratorConsole())
             // Build the service provider
@@ -74,7 +80,7 @@ public class Program
 
         runner.MigrateUp();
 
-        //runner.Rollback(countOfStep); - cofanie migracji
+       //runner.Rollback(countOfStep);  //- cofanie migracji
 
     }
 }
