@@ -1,7 +1,5 @@
-﻿using Core.Common;
-using Core.Filters;
-using Core.Models;
-using Core.Repostiories;
+﻿using Core.Models;
+using Core.Repostiories.Projects;
 using DataAccessLayer.Migrations;
 using FluentMigrator.Runner;
 
@@ -15,12 +13,11 @@ public class Program
         IProjectRepository projectRepository = new ProjectRepository();
         Project test = new Project()
         {
-            Id = 1,
             Name = "taxfaffaafs",
             EndDate = DateTime.Now,
             StartDate = DateTime.Now,
         };
-        //projectRepository.AddProject(test);
+        var a = projectRepository.GetProject(1);
         //var filter = new PagedQuerryFilter<ProjectFilter>()
         //{
         //    Page = 1,
@@ -30,53 +27,27 @@ public class Program
         //        Name="dupa"
         //    }
         //};
-        projectRepository.UpdateProject(test);
 
-        try
-        {
-            using (var serviceProvider = CreateServices())
-            using (var scope = serviceProvider.CreateScope())
-            {
-                UpdateDatabase(scope.ServiceProvider);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An error occurred: {ex.Message}");
-        }
+
+        //projectRepository.UpdateProject(test);
+
+
     }
 
-    /// <summary>
-    /// Configure the dependency injection services
-    /// </summary>
     private static ServiceProvider CreateServices()
     {
         return new ServiceCollection()
-            // Add common FluentMigrator services
             .AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
-                // Add SQLite support to FluentMigrator
                 .AddSqlServer()
-                // Set the connection string
                 .WithGlobalConnectionString("Data Source=DARKNEFILN;Initial Catalog=JiraClone;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;")
-                // Define the assembly containing the migrations
-
                 .ScanIn(typeof(AddCoreTables).Assembly).For.Migrations())
-            // Enable logging to console in the FluentMigrator way
             .AddLogging(lb => lb.AddFluentMigratorConsole())
-            // Build the service provider
             .BuildServiceProvider(false);
     }
-
-    /// <summary>
-    /// Update the database
-    /// </summary>
     private static void UpdateDatabase(IServiceProvider serviceProvider)
     {
-        // Instantiate the runner
         var runner = serviceProvider.GetRequiredService<IMigrationRunner>();
-
-        // Execute the migrations
 
         runner.MigrateUp();
 

@@ -1,9 +1,14 @@
-﻿namespace Core.Models;
+﻿using Core.Common;
 
-public class Project
+namespace Core.Models;
+
+public class Project : BaseEntity<int>
 {
-    public int Id { get; set; }    
-    public string? Name { get; set; }    
+    public string? Name { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    public List<Task> Tasks { get; set; } = [];
+    public List<Sprint> Sprints { get; set; }
 }
+
+

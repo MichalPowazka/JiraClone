@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core.Filters
+namespace Core.Services.AppConfig
 {
-    public interface IFilter
+    internal class AppConfigService
     {
-
     }
 }

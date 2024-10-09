@@ -9,7 +9,11 @@
   <ItemGroup>
     <Folder Include="Commands\" />
     <Folder Include="Querries\" />
-    <Folder Include="Services\" />
+    <Folder Include="Repostiories\Comment\" />
+    <Folder Include="Repostiories\User\" />
+    <Folder Include="Repostiories\Task\" />
+    <Folder Include="Services\JwtService\" />
+    <Folder Include="Services\EmailService\" />
   </ItemGroup>
 
   <ItemGroup>
