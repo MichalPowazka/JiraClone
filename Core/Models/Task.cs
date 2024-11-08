@@ -18,8 +18,12 @@ public class Task : BaseEntity<int>
     [JsonIgnore]
     public Project? Project { get; set; }
 
+    [JsonIgnore]
+    public Sprint? Sprint { get; set; }
+
     public int? ParentTaskId { get; set; }
     public Task? ParentTask { get; set; }
+
 
 }
 

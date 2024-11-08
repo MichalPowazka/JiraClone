@@ -1,6 +1,8 @@
 ﻿using Core.Common;
 using Core.Filters;
 using Core.Models;
+using System.ComponentModel;
+using Task = Core.Models.Task;
 
 namespace Core.Repostiories.Projects;
 
@@ -11,6 +13,7 @@ public interface IProjectRepository
 
     List<Project> GetPagedFilteredList(PagedQuerryFilter<ProjectFilter> filter);
     int DeleteProject(int id);
-    void AddProject(Project project);
-    void UpdateProject(Project project);
+    int AddProject(Project project);
+    int UpdateProject(Project project);
+    long AddTask(Task task, long projectId);
 }

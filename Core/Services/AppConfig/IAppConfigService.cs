@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Core.Services.AppConfig
 {
-    internal interface IAppConfigService
+
+    public interface IAppConfigService
     {
-    }
+        public string ConnectionString { get; set; }    
+     }
 }
