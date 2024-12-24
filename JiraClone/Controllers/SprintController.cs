@@ -24,13 +24,13 @@ public class SprintController(ISprintRepository sprintRepository) : ControllerBa
     }
 
     [HttpPost]
-    public int AddSprint(Sprint sprint)
+    public long AddSprint(Sprint sprint)
     {
         return _sprintRepository.AddSprint(sprint);
     }
 
     [HttpPut]
-    public int UpdateSprint(Sprint sprint)
+    public long  UpdateSprint(Sprint sprint)
     {
         return _sprintRepository.UpdateSprint(sprint);
     }

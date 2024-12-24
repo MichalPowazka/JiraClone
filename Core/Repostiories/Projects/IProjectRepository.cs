@@ -12,7 +12,7 @@ public interface IProjectRepository
     List<Project> GetAll();
 
     List<Project> GetPagedFilteredList(PagedQuerryFilter<ProjectFilter> filter);
-    int DeleteProject(int id);
+    long DeleteProject(long id);
     int AddProject(Project project);
     int UpdateProject(Project project);
     long AddTask(Task task, long projectId);

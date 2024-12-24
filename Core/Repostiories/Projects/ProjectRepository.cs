@@ -5,6 +5,9 @@ using Core.Services.AppConfig;
 using Dapper;
 using System.Data.SqlClient;
 using System.Text.RegularExpressions;
+using System.Transactions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Xml.Linq;
 using Task = Core.Models.Task;
 
 namespace Core.Repostiories.Projects;
@@ -62,21 +65,51 @@ public class ProjectRepository : IProjectRepository
     {
         //sprawdzic czy taki proejkt istnije
         //dodac task z odpowiednim projectId
+        using var connection = new SqlConnection(_appConfigService.ConnectionString);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
 
-        throw new NotImplementedException();
+        var countProjectSql = "SELECT COUNT(1) FROM Project WHERE Id = @Id";
+        var projectCount = connection.QuerySingle<int>(countProjectSql, new { Id = projectId }, transaction);
+        if(projectCount < 1)
+        {
+            throw new Exception("Project Not Exist");
+        }
+        var addTaskSql = @"INSERT INTO [dbo].[Task]
+        ([Name]
+        , [Description]
+        , [Type]
+        , [AssignedUserId]
+        , [ProjectId]
+        , [ParentTaskId]
+        , [SprintId])
+     Output Inserted.Id 
+     VALUES
+           (@Name
+           , @Description
+           , @Type
+           , @AssignedUserId
+           , @ProjectId
+           , @ParentTaskId
+           , @SprintId)";
+        var insertedId = connection.QuerySingle<int>(addTaskSql, task, transaction);
+        transaction.Commit();
+
+        return insertedId;
     }
 
-    int IProjectRepository.DeleteProject(int id)
+    long IProjectRepository.DeleteProject(long id)
     {
 
         using var connection = new SqlConnection(_appConfigService.ConnectionString);
         connection.Open();
         using var transaction = connection.BeginTransaction();
         var deleteTasksSql = "Delete From Task Where ProjectId = @Id";
-        /*Utworzenie trasakcji projektu która usuwa zadania z projektu aby zachowac spojnosc */
-        //otworzyc tranzakacje
-        //usunac taski z proejktu
         var affectedTaskTable = connection.Execute(deleteTasksSql, new { Id = id }, transaction);
+
+        var deleteSprintsSql = "Delete From Sprint Where ProjectId = @Id";
+        var affectedSprintTable = connection.Execute(deleteSprintsSql, new { Id = id }, transaction);
+
 
         var deleteProjectSql = @"Delete From Project Where Id = @Id";
 
@@ -104,59 +137,73 @@ public class ProjectRepository : IProjectRepository
 
     List<Project> IProjectRepository.GetPagedFilteredList(PagedQuerryFilter<ProjectFilter> filter)
     {
+        string whereData = "where ";
+        DynamicParameters parameters = new DynamicParameters();
+        if (!string.IsNullOrWhiteSpace(filter.Filter.Name))
+        {
+            whereData += $"AND p.Name like @Name ";
+            parameters.Add("Name", $"%{filter.Filter.Name}%");
+        }
         throw new NotImplementedException();
     }
 
     Project IProjectRepository.GetProject(int id)
     {
-        Project result;
-        var sql = @"Select t.*, p.*, pt.* From Task t
+
+        using var connection = new SqlConnection(_appConfigService.ConnectionString);
+
+        var sql = @"Select p.* from Project p where p.Id = @Id";
+        var result = connection.QueryFirst<Project>(sql, new { Id = id });
+  
+
+        sql = @"Select t.*, p.*, pt.* From Task t
                     inner join Project p on t.ProjectId = p.Id
                     left join Task pt on t.ParentTaskId = pt.Id 
                     where t.ProjectId = @Id";
-        using (var connection = new SqlConnection(_appConfigService.ConnectionString))
-        {
-            var tasks = connection.Query<Task, Project, Task, Task>(sql,
-               (t, p, pt) =>
-               {
-                   t.Project = p;
-                   t.ParentTask = pt;
-                   return t;
-               }, new { Id = id }).ToList();
 
-            sql = @"Select t.*, s.* From Task t
+
+        var tasks = connection.Query<Task, Project, Task, Task>(sql,
+           (t, p, pt) =>
+           {
+               t.Project = p;
+               t.ParentTask = pt;
+               return t;
+           }, new { Id = id }).ToList();
+
+        sql = @"Select t.*, s.* From Task t
                     inner join Sprint s on t.SprintId = s.Id
                     where s.ProjectId = @Id;";
-            result = tasks.First().Project!;
 
-            var sprints = connection.Query<Task, Sprint, Task>(sql,
-                (task, sprint) =>
-                {
-                    task.Sprint = sprint;
-                    return task;
-                },
-                new { Id = id })
-                .ToList()
-                .GroupBy(t => t.Sprint)
-                .Select(g =>
-                {
-                    var sprint = g.Key;
-                    sprint!.Tasks = g.ToList();
-                    return sprint;
-                })
-                .ToList();
-
-            result.Sprints = sprints;
-
-            //zapakowac to w tranazacje
+        result.Tasks = tasks;
 
 
-            //zrobic tranazakcje, i dociągnac sprinty na podstwie project id
-            result.Tasks = tasks;
-        }
+        var sprints = connection.Query<Task, Sprint, Task>(sql,
+            (task, sprint) =>
+            {
+                task.Sprint = sprint;
+                return task;
+            },
+            new { Id = id })
+            .ToList()
+            .GroupBy(t => t.Sprint)
+            .Select(g =>
+            {
+                var sprint = g.Key;
+                sprint!.Tasks = g.ToList();
+                return sprint;
+            })
+            .ToList();
+
+        result.Sprints = sprints;
+
+        //zapakowac to w tranazacje
 
 
+        //zrobic tranazakcje, i dociągnac sprinty na podstwie project id
+        result.Tasks = tasks;
         return result;
+
+
     }
 
     int IProjectRepository.UpdateProject(Project project)

@@ -19,6 +19,14 @@ public class ProjectController(IProjectRepository projectRepository ) : Controll
 
     }
 
+    [HttpGet("get-all")]
+    public List<Project> GetAll()
+    {
+        var p = new Project();
+        return _projectRepository.GetAll();
+
+    }
+
     [HttpDelete]
     public long DeleteProject(long id)
     {
@@ -46,9 +54,15 @@ public class ProjectController(IProjectRepository projectRepository ) : Controll
 
 
     [HttpPost("add-task")]
-    public int AddTask(Core.Models.Task task, long projectId)
+    public long AddTask(Core.Models.Task task, long projectId)
     {
-        return 1;
+        return _projectRepository.AddTask(task,projectId);
+    }
+
+    [HttpPost("add-member")]
+    public long AddTask(long UserId, long projectId, long RoleId)
+    {
+        return _projectRepository.AddTask(task, projectId);
     }
 
 }

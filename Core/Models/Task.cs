@@ -8,7 +8,7 @@ public class Task : BaseEntity<int>
     public required string Name { get; set; }
     public string? Description { get; set; }
     public TaskType Type { get; set; }
-    public int AssignedUserId { get; set; }
+    public int? AssignedUserId { get; set; }
     //public User AssignedUser {get; set;}
     public int ProjectId { get; set; }
     public int EstimatedTime { get; set; }

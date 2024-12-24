@@ -12,7 +12,7 @@ namespace Core.Common
     {
         public int Page { get; set; }
         public int PageCount { get; set; }
-        public T FIlter { get; set; }
+        public T Filter { get; set; }
 
         public string? SortField { get; set; }
         public bool SortDescending { get; set; }
