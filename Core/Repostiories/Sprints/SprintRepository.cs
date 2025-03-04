@@ -13,9 +13,10 @@ namespace Core.Repostiories.Sprints
         {
             _appConfigService = appConfigService;
         }
-
         long ISprintRepository.AddSprint(Sprint sprint)
         {
+            //sprawdzic czy projekt istinieje
+
             var sql = @"Insert Into Sprint (Name,Description,StartDate,EndDate,ProjectId)
                     Output Inserted.Id 
                     Values(@Name, @Description,@StartDate, @EndDate, @ProjectId)";

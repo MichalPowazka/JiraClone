@@ -1,28 +1,38 @@
 ﻿using Core.Common;
 using Core.Filters;
 using Core.Models;
+using Core.Repostiories.Sprints;
 using Core.Services.AppConfig;
 using Dapper;
 using System.Data.SqlClient;
 using System.Text.RegularExpressions;
-using System.Transactions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Xml.Linq;
 using Task = Core.Models.Task;
+
 
 namespace Core.Repostiories.Projects;
 
 public class ProjectRepository : IProjectRepository
 {
     private readonly IAppConfigService _appConfigService;
+    private readonly ISprintRepository sprintRepository;
 
 
-    public ProjectRepository(IAppConfigService appConfigService)
+
+    public ProjectRepository(IAppConfigService appConfigService, ISprintRepository sprintRepository)
     {
         _appConfigService = appConfigService;
+        this.sprintRepository = sprintRepository;
     }
 
+    public long AddMember(long userId, long projectId, long roleId)
+    {
+        throw new NotImplementedException();
+    }
 
+    public long AddSprint(Sprint sprint, long projectId)
+    {
+        throw new NotImplementedException();
+    }
 
     public List<Project> GetPagedFilteredList(PagedQuerryFilter<ProjectFilter> filter)
     {
@@ -30,10 +40,10 @@ public class ProjectRepository : IProjectRepository
 
         var whereData = string.Empty;
         var param = new DynamicParameters();
-        if (!string.IsNullOrEmpty(filter.FIlter.Name))
+        if (!string.IsNullOrEmpty(filter.Filter.Name))
         {
             whereData += $"AND Name like @Name ";
-            param.Add("Name", $"%{filter.FIlter.Name}%");
+            param.Add("Name", $"%{filter.Filter.Name}%");
         }
 
         var regex = new Regex(Regex.Escape("AND"));
@@ -49,14 +59,14 @@ public class ProjectRepository : IProjectRepository
 
     }
 
-    int IProjectRepository.AddProject(Project project)
+    async Task<int> IProjectRepository.AddProject(Project project)
     {
         var sql = @"Insert Into Project (Name,StartDate,EndDate)
                     Output Inserted.Id 
                     Values(@Name, @StartDate, @EndDate)";
-        using (var connection = new SqlConnection("Data Source=DARKNEFILN;Initial Catalog=JiraClone;Integrated Security=True;Connect Timeout=30;Encrypt=False;"))
+        using ( var connection = new SqlConnection("Data Source=DARKNEFILN;Initial Catalog=JiraClone;Integrated Security=True;Connect Timeout=30;Encrypt=False;"))
         {
-            var insertedId = connection.QuerySingle<int>(sql, project);
+            var insertedId = await connection.QuerySingleAsync<int>(sql, project);
             return insertedId;
         }
     }
@@ -71,7 +81,7 @@ public class ProjectRepository : IProjectRepository
 
         var countProjectSql = "SELECT COUNT(1) FROM Project WHERE Id = @Id";
         var projectCount = connection.QuerySingle<int>(countProjectSql, new { Id = projectId }, transaction);
-        if(projectCount < 1)
+        if (projectCount < 1)
         {
             throw new Exception("Project Not Exist");
         }
@@ -94,6 +104,8 @@ public class ProjectRepository : IProjectRepository
            , @SprintId)";
         var insertedId = connection.QuerySingle<int>(addTaskSql, task, transaction);
         transaction.Commit();
+
+      
 
         return insertedId;
     }
@@ -147,63 +159,69 @@ public class ProjectRepository : IProjectRepository
         throw new NotImplementedException();
     }
 
-    Project IProjectRepository.GetProject(int id)
+    public async Task<Project> GetProject(int id)
     {
-
         using var connection = new SqlConnection(_appConfigService.ConnectionString);
+        connection.Open();
 
-        var sql = @"Select p.* from Project p where p.Id = @Id";
-        var result = connection.QueryFirst<Project>(sql, new { Id = id });
-  
+        using var transaction = connection.BeginTransaction();
 
-        sql = @"Select t.*, p.*, pt.* From Task t
-                    inner join Project p on t.ProjectId = p.Id
-                    left join Task pt on t.ParentTaskId = pt.Id 
-                    where t.ProjectId = @Id";
+        try
+        {
+            // Fetch the project
+            var sqlProject = @"SELECT p.* FROM Project p WHERE p.Id = @Id;";
+            var project = await connection.QueryFirstOrDefaultAsync<Project>(sqlProject, new { Id = id }, transaction);
 
-
-        var tasks = connection.Query<Task, Project, Task, Task>(sql,
-           (t, p, pt) =>
-           {
-               t.Project = p;
-               t.ParentTask = pt;
-               return t;
-           }, new { Id = id }).ToList();
-
-        sql = @"Select t.*, s.* From Task t
-                    inner join Sprint s on t.SprintId = s.Id
-                    where s.ProjectId = @Id;";
-
-        result.Tasks = tasks;
-
-
-        var sprints = connection.Query<Task, Sprint, Task>(sql,
-            (task, sprint) =>
+            if (project == null)
             {
-                task.Sprint = sprint;
-                return task;
-            },
-            new { Id = id })
-            .ToList()
-            .GroupBy(t => t.Sprint)
-            .Select(g =>
+                throw new Exception($"Project with Id {id} not found.");
+            }
+
+            // Fetch the tasks and map relations
+            var sqlTasks = @"
+            SELECT t.*, p.*, pt.*
+            FROM Task t
+            INNER JOIN Project p ON t.ProjectId = p.Id
+            LEFT JOIN Task pt ON t.ParentTaskId = pt.Id
+            WHERE t.ProjectId = @Id;";
+
+            var tasks = (await connection.QueryAsync<Task, Project, Task, Task>(
+                sqlTasks,
+                (task, proj, parentTask) =>
+                {
+                    task.Project = proj;
+                    task.ParentTask = parentTask;
+                    return task;
+                },
+                new { Id = id },
+                transaction
+            )).ToList();
+
+            // Fetch sprints
+            var sqlSprints = @"SELECT s.* FROM Sprint s WHERE s.ProjectId = @Id;";
+            var sprints = connection.Query<Sprint>(sqlSprints, new { Id = id }, transaction).ToList();
+
+            // Assign tasks to their respective sprints
+            foreach (var sprint in sprints)
             {
-                var sprint = g.Key;
-                sprint!.Tasks = g.ToList();
-                return sprint;
-            })
-            .ToList();
+                sprint.Tasks = tasks.Where(t => t.SprintId == sprint.Id).ToList();
+            }
 
-        result.Sprints = sprints;
+            // Assign sprints and tasks to the project
+            project.Sprints = sprints;
+            project.Tasks = tasks;
 
-        //zapakowac to w tranazacje
+            // Commit transaction
+            transaction.Commit();
 
-
-        //zrobic tranazakcje, i dociągnac sprinty na podstwie project id
-        result.Tasks = tasks;
-        return result;
-
-
+            return project;
+        }
+        catch (Exception ex)
+        {
+            transaction.Rollback();
+            // Log the exception here (e.g., using a logging framework)
+            throw new Exception("Error fetching project data.", ex);
+        }
     }
 
     int IProjectRepository.UpdateProject(Project project)
@@ -215,6 +233,17 @@ public class ProjectRepository : IProjectRepository
         {
             connection.Execute(sql, project);
             return project.Id;
+        }
+    }
+
+    public bool IsProjectExist(int id)
+    {
+        var sql = @"Select Count(*) from Project where Id = @Id";
+
+        using (var connection = new SqlConnection(_appConfigService.ConnectionString))
+        {
+            var count = connection.QuerySingle<int>(sql, new { Id = id });
+            return count > 0;
         }
     }
 }

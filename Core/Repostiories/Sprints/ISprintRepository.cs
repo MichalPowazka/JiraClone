@@ -5,6 +5,7 @@ namespace Core.Repostiories.Sprints;
 
 public interface ISprintRepository
 {
+
     Sprint GetSprint(long id);
     List<Sprint> GetAll();
     long DeleteSprint(long id);

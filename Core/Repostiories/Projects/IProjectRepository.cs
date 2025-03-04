@@ -8,12 +8,16 @@ namespace Core.Repostiories.Projects;
 
 public interface IProjectRepository
 {
-    Project GetProject(int id);
+    Task<Project> GetProject(int id);
     List<Project> GetAll();
 
     List<Project> GetPagedFilteredList(PagedQuerryFilter<ProjectFilter> filter);
     long DeleteProject(long id);
-    int AddProject(Project project);
+    Task<int> AddProject(Project project);
     int UpdateProject(Project project);
     long AddTask(Task task, long projectId);
+    long AddMember(long userId, long projectId, long roleId);
+    long AddSprint(Sprint sprint, long projectId);
+    bool IsProjectExist(int id);
+
 }

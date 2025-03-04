@@ -1,13 +1,14 @@
 ﻿using Core.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core.Models
 {
     public class User : BaseEntity<long>
     {
+        public required string FirstName { get; set; }
+        public required string LastName { get; set; }
+        public required string Email { get; set; }
+        public required string PaswordHash { get; set; }
+        public bool IsActive { get; set; }
+        public bool PaswordChangeRequired { get; set; }
     }
 }

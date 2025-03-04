@@ -1,6 +1,11 @@
+using Core.Handlers;
 using Core.Repostiories.Projects;
 using Core.Repostiories.Sprints;
 using Core.Services.AppConfig;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using JiraClone.Validators;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,12 +14,20 @@ var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
             .Build();
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddFluentValidation(fv =>
+{
+    fv.RegisterValidatorsFromAssemblyContaining<ProjectValidator>();
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-builder.Services.AddScoped<ISprintRepository, SprintRepository>();
+
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(CreateProjectComandHandler).Assembly));
+builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
+builder.Services.AddTransient<ISprintRepository, SprintRepository>();
+
+
 var appConfig = configuration.GetSection(nameof(AppConfig)).Get<AppConfig>();
 
 builder.Services.AddSingleton<IAppConfigService, AppConfig>(x => appConfig!); var app = builder.Build();

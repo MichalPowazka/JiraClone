@@ -1,28 +1,34 @@
-﻿using Core.Models;
+﻿using Core.Commands;
+using Core.Models;
+using Core.Querries;
 using Core.Repostiories.Projects;
+using Core.Repostiories.Sprints;
 using Core.Services.AppConfig;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace JiraClone.Controllers;
 
 [Route("api/project")]
 [ApiController]
-public class ProjectController(IProjectRepository projectRepository ) : ControllerBase
+public class ProjectController(IProjectRepository projectRepository, ISprintRepository sprintRepository, IMediator mediatr) : ControllerBase
 {
     private readonly IProjectRepository _projectRepository = projectRepository;
+    private readonly ISprintRepository _sprintRepository = sprintRepository;
+    private readonly IMediator _mediatr = mediatr;
 
-    [HttpGet]
-    public Project GetProject(int id)
+
+    [HttpPost("get-project")]
+    public async Task<Project> GetProject(GetProjectQuerry request)
     {
-        var p = new Project();
-        return _projectRepository.GetProject(id);
-
+        return await _mediatr.Send(request); 
     }
 
     [HttpGet("get-all")]
     public List<Project> GetAll()
     {
-        var p = new Project();
+
         return _projectRepository.GetAll();
 
     }
@@ -30,15 +36,16 @@ public class ProjectController(IProjectRepository projectRepository ) : Controll
     [HttpDelete]
     public long DeleteProject(long id)
     {
-        
+
         return _projectRepository.DeleteProject(id);
     }
 
     [HttpPost]
-    public long AddProject(Project project)
+    public async Task<int> AddProject(CreateProjectComand request)
     {
-        return _projectRepository.AddProject(project);
+        return await _mediatr.Send(request);
     }
+
     [HttpPut]
     public long UpdateProject(Project project)
     {
@@ -49,20 +56,20 @@ public class ProjectController(IProjectRepository projectRepository ) : Controll
     [HttpPost("add-sprint")]
     public long AddSprint(Sprint sprint)
     {
-        return 1;
+        return _sprintRepository.AddSprint(sprint);
     }
 
 
     [HttpPost("add-task")]
     public long AddTask(Core.Models.Task task, long projectId)
     {
-        return _projectRepository.AddTask(task,projectId);
+        return _projectRepository.AddTask(task, projectId);
     }
 
     [HttpPost("add-member")]
-    public long AddTask(long UserId, long projectId, long RoleId)
+    public long AddTask(long userId, long projectId, long roleId)
     {
-        return _projectRepository.AddTask(task, projectId);
+        return _projectRepository.AddMember(userId, projectId, roleId);
     }
 
 }
