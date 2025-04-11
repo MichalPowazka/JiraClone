@@ -13,5 +13,4 @@ public interface ISprintRepository
     long UpdateSprint(Sprint sprint);
     long AddTask(Task task, long sprintId);
 
-
 }

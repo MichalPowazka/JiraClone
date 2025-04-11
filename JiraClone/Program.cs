@@ -1,7 +1,9 @@
-using Core.Handlers;
+using Core.Commands.Project.CreateProject;
 using Core.Repostiories.Projects;
 using Core.Repostiories.Sprints;
+using Core.Repostiories.Users;
 using Core.Services.AppConfig;
+using Core.Services.NewFolder;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using JiraClone.Validators;
@@ -26,6 +28,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(CreateProjectComandHandler).Assembly));
 builder.Services.AddTransient<IProjectRepository, ProjectRepository>();
 builder.Services.AddTransient<ISprintRepository, SprintRepository>();
+builder.Services.AddTransient<IUserRepository, UserRepository>();
+builder.Services.AddTransient<IUserService, UserService>();
+
+
 
 
 var appConfig = configuration.GetSection(nameof(AppConfig)).Get<AppConfig>();

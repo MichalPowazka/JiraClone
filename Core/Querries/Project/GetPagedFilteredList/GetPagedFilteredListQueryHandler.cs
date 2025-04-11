@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core.Handlers
+namespace Core.Querries.Project.GetPagedFilteredList
 {
-    internal class GetProjectAllQueryHandler
+    class GetPagedFilteredListQueryHandler
     {
     }
 }

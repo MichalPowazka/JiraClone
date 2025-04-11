@@ -4,7 +4,7 @@ using Core.Models;
 using Core.Repostiories.Sprints;
 using Core.Services.AppConfig;
 using Dapper;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
 using Task = Core.Models.Task;
 
@@ -64,7 +64,7 @@ public class ProjectRepository : IProjectRepository
         var sql = @"Insert Into Project (Name,StartDate,EndDate)
                     Output Inserted.Id 
                     Values(@Name, @StartDate, @EndDate)";
-        using ( var connection = new SqlConnection("Data Source=DARKNEFILN;Initial Catalog=JiraClone;Integrated Security=True;Connect Timeout=30;Encrypt=False;"))
+        using ( var connection = new SqlConnection(_appConfigService.ConnectionString))
         {
             var insertedId = await connection.QuerySingleAsync<int>(sql, project);
             return insertedId;
@@ -110,7 +110,7 @@ public class ProjectRepository : IProjectRepository
         return insertedId;
     }
 
-    long IProjectRepository.DeleteProject(long id)
+    async Task<long> IProjectRepository.DeleteProject(long id)
     {
 
         using var connection = new SqlConnection(_appConfigService.ConnectionString);
@@ -125,7 +125,7 @@ public class ProjectRepository : IProjectRepository
 
         var deleteProjectSql = @"Delete From Project Where Id = @Id";
 
-        var affectedProjectTable = connection.Execute(deleteProjectSql, new { Id = id }, transaction);
+        var affectedProjectTable = await connection.ExecuteAsync(deleteProjectSql, new { Id = id }, transaction);
         transaction.Commit();
         connection.Close();
 
@@ -224,16 +224,17 @@ public class ProjectRepository : IProjectRepository
         }
     }
 
-    int IProjectRepository.UpdateProject(Project project)
+    public async Task<int> UpdateProject(Project project)
     {
 
         var sql = @"Update Project SET Name = @Name,  StartDate = @StartDate,  EndDate = @EndDate Where Id = @Id";
 
         using (var connection = new SqlConnection(_appConfigService.ConnectionString))
         {
-            connection.Execute(sql, project);
-            return project.Id;
+             await connection.ExecuteAsync(sql, project);
+            
         }
+        return project.Id;
     }
 
     public bool IsProjectExist(int id)

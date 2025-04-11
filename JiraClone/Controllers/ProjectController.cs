@@ -1,6 +1,8 @@
-﻿using Core.Commands;
+﻿using Core.Commands.Project.CreateProject;
+using Core.Commands.Project.DeleteProject;
+using Core.Commands.Project.UpdateProject;
 using Core.Models;
-using Core.Querries;
+using Core.Querries.Project.GetProject;
 using Core.Repostiories.Projects;
 using Core.Repostiories.Sprints;
 using Core.Services.AppConfig;
@@ -34,10 +36,10 @@ public class ProjectController(IProjectRepository projectRepository, ISprintRepo
     }
 
     [HttpDelete]
-    public long DeleteProject(long id)
+    public async Task<long> DeleteProject(DeleteProjectCommand request)
     {
 
-        return _projectRepository.DeleteProject(id);
+        return await _mediatr.Send(request);
     }
 
     [HttpPost]
@@ -47,9 +49,9 @@ public class ProjectController(IProjectRepository projectRepository, ISprintRepo
     }
 
     [HttpPut]
-    public long UpdateProject(Project project)
+    public async Task<long> UpdateProject(UpdateProjectCommand request)
     {
-        return _projectRepository.UpdateProject(project);
+        return await _mediatr.Send(request);
 
     }
 

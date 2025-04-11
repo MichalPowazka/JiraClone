@@ -43,7 +43,7 @@ public class Program
             .AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
                 .AddSqlServer()
-                .WithGlobalConnectionString("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=JiraClone;Integrated Security=True;Connect Timeout=30;")
+                .WithGlobalConnectionString("Data Source=localhost;Initial Catalog=JiraClone;User ID=sa;Password=Powazka123@;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False")
                 .ScanIn(typeof(AddDescrption).Assembly).For.Migrations())
             .AddLogging(lb => lb.AddFluentMigratorConsole())
             .BuildServiceProvider(false);

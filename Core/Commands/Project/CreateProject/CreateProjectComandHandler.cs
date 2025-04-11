@@ -1,9 +1,8 @@
-﻿using Core.Commands;
-using Core.Models;
-using Core.Repostiories.Projects;
+﻿using Core.Repostiories.Projects;
 using MediatR;
 
-namespace Core.Handlers
+
+namespace Core.Commands.Project.CreateProject
 {
     public class CreateProjectComandHandler(IProjectRepository projectRepository) : IRequestHandler<CreateProjectComand, int>
     {
@@ -11,7 +10,7 @@ namespace Core.Handlers
 
         public async Task<int> Handle(CreateProjectComand request, CancellationToken cancellationToken)
         {
-            var project = new Project()
+            var project = new Models.Project()
             {
                 Name = request.Name,
                 StartDate= request.StartDate,

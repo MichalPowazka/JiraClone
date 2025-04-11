@@ -1,4 +1,4 @@
-﻿using Core.Commands;
+﻿using Core.Commands.Project.CreateProject;
 using Core.Models;
 using Core.Repostiories.Projects;
 using FluentValidation;
@@ -25,7 +25,7 @@ namespace JiraClone.Validators
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("Please specify a name").MinimumLength(6).WithMessage("Name must be minium 6 length");
             RuleFor(x => x.StartDate).GreaterThan(DateTime.MinValue).WithMessage("Please specify a name");
-            RuleFor(x => x.EndDate).GreaterThan(DateTime.Now).WithMessage("Please specify a name");
+            RuleFor(x => x.EndDate).GreaterThan(DateTime.Now).WithMessage("Plase specify date from future");
         }
     }
 

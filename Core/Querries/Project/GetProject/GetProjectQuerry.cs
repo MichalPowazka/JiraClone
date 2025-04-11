@@ -6,9 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core.Querries
+
+namespace Core.Querries.Project.GetProject
 {
-    public class GetProjectQuerry: IRequest<Project>
+    public class GetProjectQuerry: IRequest<Models.Project>
     {
         public int Id { get; set; } 
     }
