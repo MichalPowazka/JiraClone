@@ -28,5 +28,6 @@ namespace JiraClone.Controllers
         //tworzenie uzytownika
         //logowanie 
         //zmiana hasla
+        //test
     }
 }
